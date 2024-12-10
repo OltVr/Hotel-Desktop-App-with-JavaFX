@@ -23,13 +23,6 @@ public class SessionManager {
         }
     }
 
-    public static String getUserLastName(){
-        if (currentUser != null){
-            return currentUser.getLastName();
-        }else{
-            return null;
-        }
-    }
 
     public static String getUserEmail(){
         if (currentUser!= null){
@@ -38,22 +31,12 @@ public class SessionManager {
         return null;
     }
 
-    public static String getUserId(){
-        if(currentUser != null){
-            return currentUser.getEmail();
-        }else {
-            return null;
-        }
-    }
 
     //ROOM management
     public static void setRoom(Room room){
         selectedRoom=room;
     }
 
-    public static Room getSelectedRoom(){
-        return  selectedRoom;
-    }
 
     public static int getSelectedRoomNumber(){
         if (selectedRoom!=null) {

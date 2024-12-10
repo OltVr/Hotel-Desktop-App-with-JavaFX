@@ -2,7 +2,6 @@ package controllers;
 
 import App.Navigator;
 import App.SessionManager;
-import Repository.UserRepository;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -93,15 +92,7 @@ public class LoginController {
         private void handleCreateAccount (MouseEvent me){
             Navigator.navigate(me, Navigator.CREATE_ACCOUNT_PAGE);
         }
-    private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-    @FXML
-    private Button okButton;
+
     @FXML
     private void handleHelp(){
         Alert alert = new Alert(Alert.AlertType.INFORMATION);

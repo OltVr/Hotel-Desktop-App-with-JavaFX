@@ -30,7 +30,6 @@ public class StaffRepository {
             pst.setBoolean(7, staffData.isHasBenefits());
             pst.execute();
             pst.close();
-//            conn.close();
             return true;
         } catch (Exception e) {
             System.out.println("[ERROR] SQL did not execute " + e.getMessage());

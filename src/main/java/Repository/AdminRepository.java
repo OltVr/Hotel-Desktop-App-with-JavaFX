@@ -1,9 +1,7 @@
 package Repository;
 
 import database.DatabaseUtil;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import model.User;
+
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

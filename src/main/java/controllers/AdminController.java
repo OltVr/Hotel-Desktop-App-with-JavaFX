@@ -50,15 +50,6 @@ public class AdminController implements Initializable {
     @FXML
     private AnchorPane staffListPane;
 
-    @FXML
-    private void handleLogout(MouseEvent me) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to Sign Out?", ButtonType.YES, ButtonType.NO);
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.YES) {
-            Navigator.navigate(me, Navigator.LOGIN_PAGE);
-        }
-    }
-
     // Rooms Management Page
     @FXML
     private TextField txtRoom;
@@ -185,7 +176,14 @@ public class AdminController implements Initializable {
 
     private String anchorPane = "Dashboard";
 
-
+    @FXML
+    private void handleLogout(MouseEvent me) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to Sign Out?", ButtonType.YES, ButtonType.NO);
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.YES) {
+            Navigator.navigate(me, Navigator.LOGIN_PAGE);
+        }
+    }
 
 
     // ADMIN DASHBOARD
@@ -219,6 +217,7 @@ public class AdminController implements Initializable {
         alert.showAndWait();
     }
 
+    //Staff management
     @FXML
     private void handleAddStaff() {
         String firstName = txtStaffFirstName.getText();
@@ -268,6 +267,100 @@ public class AdminController implements Initializable {
         showStaffList();
     }
 
+    private void showStaffList(){
+        ObservableList<Staff> staffListData = AdminService.ListStaff();
+
+        SID_col.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getStaffID()).asObject());
+        Name_col.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStaffFirstName() + " " + cellData.getValue().getStaffLastName()));
+        staffEmail_col.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStaffEmail()));
+        position_col.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPosition()));
+        salary_col.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getSalary()).asObject());
+        FullTime_col.setCellValueFactory(cellData -> new SimpleBooleanProperty(cellData.getValue().isFullTime()).asObject());
+        Benefits_col.setCellValueFactory(cellData -> new SimpleBooleanProperty(cellData.getValue().isHasBenefits()).asObject());
+
+        FullTime_col.setCellFactory(column -> new TableCell<Staff, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item ? "Full Time" : "Half Time");
+                }
+            }
+        });
+
+        Benefits_col.setCellFactory(column -> new TableCell<Staff, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item ? "YES" : "NO");
+                }
+            }
+        });
+
+        reservationTable1.setItems(staffListData);
+    }
+
+    @FXML
+    private void handleDeleteStaff(){
+        Staff selectedStaff = reservationTable1.getSelectionModel().getSelectedItem();
+        if (selectedStaff != null) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this staff member?", ButtonType.YES, ButtonType.NO);
+            alert.showAndWait();
+
+            if (alert.getResult() == ButtonType.YES) {
+                boolean success = AdminService.deleteStaff(selectedStaff.getStaffEmail());
+                if (success) {
+                    reservationTable1.getItems().remove(selectedStaff);
+                } else {
+                    showAlert("Error", "Failed to delete staff member.");
+                }
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "No user selected.");
+            alert.showAndWait();
+        }
+    }
+
+    @FXML
+    private void handleSearchStaff() {
+        String searchTerm = searchFieldStaff.getText().trim();
+        if (!searchTerm.isEmpty()) {
+            StaffFilter staffFilter = new StaffFilter(searchTerm);
+            String query = staffFilter.buildQuery();
+            ObservableList<Staff> searchResults = AdminService.searchStaff(query);
+            if (!searchResults.isEmpty()) {
+                reservationTable1.setItems(searchResults);
+            } else {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "No staff member found for the given email address.");
+                alert.showAndWait();
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "Please enter an email address.");
+            alert.showAndWait();
+        }
+    }
+
+    @FXML
+    private void handleStaff() {
+        setAllPanesInvisible();
+        addStaffPane.setVisible(true);
+        pane = "addStaff";
+        Navigator.setCurrentVisibleSection("#addStaffPane");
+    }
+
+    @FXML
+    private void handleStaffList() {
+        setAllPanesInvisible();
+        staffListPane.setVisible(true);
+        pane = "staffList";
+        Navigator.setCurrentVisibleSection("#staffListPane");
+    }
+
     // ROOM MANAGEMENT
     @FXML
     private void handleAddRoom() {
@@ -278,7 +371,7 @@ public class AdminController implements Initializable {
         Integer beds = this.Beds.getSelectionModel().getSelectedItem();
         String priceText = this.txtPrice.getText();
 
-        // Check if any required fields are empty or selections are null
+
         if (roomText.isEmpty() || floorText.isEmpty() || roomType == null || capacity == null || beds == null || priceText.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Fill all room information fields first.");
             alert.showAndWait();
@@ -312,6 +405,122 @@ public class AdminController implements Initializable {
         }
     }
 
+    private void showRoomList(){
+        ObservableList<Room> listData = AdminService.ListRoom();
+
+        roomNumber_col.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
+        floorNumber_col.setCellValueFactory(new PropertyValueFactory<>("floorNumber"));
+        roomType_col.setCellValueFactory(new PropertyValueFactory<>("roomType"));
+        capacity_col.setCellValueFactory(new PropertyValueFactory<>("capacity"));
+        bedNumber_col.setCellValueFactory(new PropertyValueFactory<>("bedNumber"));
+        price_col.setCellValueFactory(new PropertyValueFactory<>("price"));
+        Available_col.setCellValueFactory(cellData -> {
+            Room room = cellData.getValue();
+            String availability = room.isAvailable() ? "Available" : "Unavailable";
+            return new SimpleStringProperty(availability);
+        });
+
+        roomTable.setItems(listData);
+    }
+
+    @FXML
+    private void handleDeleteRoom() {
+        String roomText = txtRoom.getText();
+        String floorText = txtFloor.getText();
+
+
+        if (roomText.isEmpty() || floorText.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Please fill in both the room number and floor number.");
+            alert.showAndWait();
+            return;
+        }
+
+
+        int roomNumber;
+        int floorNumber;
+        try {
+            roomNumber = Integer.parseInt(roomText);
+            floorNumber = Integer.parseInt(floorText);
+        } catch (NumberFormatException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter valid numeric values for room number and floor number.");
+            alert.showAndWait();
+            return;
+        }
+
+        if (AdminService.deleteRoom(roomNumber, floorNumber)) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this room?", ButtonType.YES, ButtonType.NO);
+            alert.showAndWait();
+            if (alert.getResult() == ButtonType.YES) {
+                showRoomList();
+                clear();
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't find room.");
+            alert.showAndWait();
+        }
+    }
+
+    @FXML
+    private void  roomSelect(){
+        Room room = roomTable.getSelectionModel().getSelectedItem();
+
+
+        if (room!=null){
+            txtRoom.setText(String.valueOf(room.getRoomNumber()));
+            txtFloor.setText(String.valueOf(room.getFloorNumber()));
+            txtPrice.setText(String.valueOf(room.getPrice()));}
+
+    }
+
+    @FXML
+    private void handleRooms() {
+        setAllPanesInvisible();
+        roomPane.setVisible(true);
+        pane = "Rooms";
+        Navigator.setCurrentVisibleSection("#roomPane");
+    }
+
+    @FXML
+    private void handleUpdate() {
+        String roomText = this.txtRoom.getText();
+        String floorText = this.txtFloor.getText();
+        String roomType = this.roomType.getSelectionModel().getSelectedItem();
+        Integer capacity = this.Capacity.getSelectionModel().getSelectedItem();
+        Integer beds = this.Beds.getSelectionModel().getSelectedItem();
+        String priceText = this.txtPrice.getText();
+
+        if (roomText.isEmpty() || floorText.isEmpty() || roomType == null || capacity == null || beds == null || priceText.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Fill all room information fields first.");
+            alert.showAndWait();
+            return;
+        }
+
+        int roomNumber;
+        int floorNumber;
+        double price;
+        try {
+            roomNumber = Integer.parseInt(roomText);
+            floorNumber = Integer.parseInt(floorText);
+            price = Double.parseDouble(priceText);
+        } catch (NumberFormatException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter valid numeric values for room number, floor, and price.");
+            alert.showAndWait();
+            return;
+        }
+
+        InsertRoomDto roomData = new InsertRoomDto(roomNumber, floorNumber, roomType, capacity, beds, price);
+
+        if (AdminService.updateRoom(roomData)) {
+            showRoomList();
+            clear();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Room was updated successfully.");
+            alert.showAndWait();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "The room either does not exist or there was a database error.");
+            alert.showAndWait();
+        }
+    }
+
     // Nderrimi i faqeve me visibility prej scenebuilder
     private void setAllPanesInvisible() {
         dashboardPane.setVisible(false);
@@ -337,21 +546,6 @@ public class AdminController implements Initializable {
         alert.showAndWait();
     }
 
-    @FXML
-    private void handleReservations() {
-        setAllPanesInvisible();
-        reservationPane.setVisible(true);
-        pane = "Reservations";
-        Navigator.setCurrentVisibleSection("#reservationPane");
-    }
-
-    @FXML
-    private void handleRooms() {
-        setAllPanesInvisible();
-        roomPane.setVisible(true);
-        pane = "Rooms";
-        Navigator.setCurrentVisibleSection("#roomPane");
-    }
 
     @FXML
     private void handleGuests() {
@@ -362,22 +556,6 @@ public class AdminController implements Initializable {
     }
 
     @FXML
-    private void handleStaff() {
-        setAllPanesInvisible();
-        addStaffPane.setVisible(true);
-        pane = "addStaff";
-        Navigator.setCurrentVisibleSection("#addStaffPane");
-    }
-
-    @FXML
-    private void handleStaffList() {
-        setAllPanesInvisible();
-        staffListPane.setVisible(true);
-        pane = "staffList";
-        Navigator.setCurrentVisibleSection("#staffListPane");
-    }
-
-    @FXML
     private void handleBack() {
         setAllPanesInvisible();
         addStaffPane.setVisible(true);
@@ -385,25 +563,7 @@ public class AdminController implements Initializable {
         Navigator.setCurrentVisibleSection("#addStaffPane");
     }
 
-
-
-    private void showRoomList(){
-        ObservableList<Room> listData = AdminService.ListRoom();
-
-        roomNumber_col.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
-        floorNumber_col.setCellValueFactory(new PropertyValueFactory<>("floorNumber"));
-        roomType_col.setCellValueFactory(new PropertyValueFactory<>("roomType"));
-        capacity_col.setCellValueFactory(new PropertyValueFactory<>("capacity"));
-        bedNumber_col.setCellValueFactory(new PropertyValueFactory<>("bedNumber"));
-        price_col.setCellValueFactory(new PropertyValueFactory<>("price"));
-        Available_col.setCellValueFactory(cellData -> {
-            Room room = cellData.getValue();
-            String availability = room.isAvailable() ? "Available" : "Unavailable";
-            return new SimpleStringProperty(availability);
-        });
-
-        roomTable.setItems(listData);
-    }
+    //Reservation management
     private void showReservationList() {
         ObservableList<Reservation> listData = AdminService.ListReservations();
 
@@ -470,6 +630,15 @@ public class AdminController implements Initializable {
     }
 
     @FXML
+    private void handleReservations() {
+        setAllPanesInvisible();
+        reservationPane.setVisible(true);
+        pane = "Reservations";
+        Navigator.setCurrentVisibleSection("#reservationPane");
+    }
+
+    //User management
+    @FXML
     private void handleSearchUser() {
         String searchTerm = searchFieldUser.getText().trim();
         if (!searchTerm.isEmpty()) {
@@ -484,6 +653,27 @@ public class AdminController implements Initializable {
             }
         } else {
             Alert alert = new Alert(Alert.AlertType.WARNING, "Please enter an email address.");
+            alert.showAndWait();
+        }
+    }
+
+    @FXML
+    private void handleDeleteUser() {
+        User selectedUser = userTable.getSelectionModel().getSelectedItem();
+        if (selectedUser != null) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this user?", ButtonType.YES, ButtonType.NO);
+            alert.showAndWait();
+
+            if (alert.getResult() == ButtonType.YES) {
+                boolean success = AdminService.deleteUser(selectedUser.getEmail());
+                if (success) {
+                    userTable.getItems().remove(selectedUser);
+                } else {
+                    showAlert("Error", "Failed to delete user.");
+                }
+            }
+        } else {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "No user selected.");
             alert.showAndWait();
         }
     }
@@ -536,194 +726,6 @@ public class AdminController implements Initializable {
         Capacity.setPromptText("Capacity");
         Beds.getSelectionModel().clearSelection();
         Beds.setPromptText("Number of Beds");
-    }
-
-    @FXML
-    private void  roomSelect(){
-        Room room = roomTable.getSelectionModel().getSelectedItem();
-//        int num = roomTable.getSelectionModel().getSelectedIndex();
-
-        if (room!=null){
-        txtRoom.setText(String.valueOf(room.getRoomNumber()));
-        txtFloor.setText(String.valueOf(room.getFloorNumber()));
-        txtPrice.setText(String.valueOf(room.getPrice()));}
-
-    }
-
-    @FXML
-    private void handleDeleteRoom() {
-        String roomText = txtRoom.getText();
-        String floorText = txtFloor.getText();
-
-        // Check if any required fields are empty
-        if (roomText.isEmpty() || floorText.isEmpty()) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please fill in both the room number and floor number.");
-            alert.showAndWait();
-            return;
-        }
-
-        // Try to parse the room number and floor number and catch any potential NumberFormatException
-        int roomNumber;
-        int floorNumber;
-        try {
-            roomNumber = Integer.parseInt(roomText);
-            floorNumber = Integer.parseInt(floorText);
-        } catch (NumberFormatException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter valid numeric values for room number and floor number.");
-            alert.showAndWait();
-            return;
-        }
-
-        if (AdminService.deleteRoom(roomNumber, floorNumber)) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this room?", ButtonType.YES, ButtonType.NO);
-            alert.showAndWait();
-            if (alert.getResult() == ButtonType.YES) {
-                showRoomList();
-                clear();
-            }
-        } else {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Couldn't find room.");
-            alert.showAndWait();
-        }
-    }
-    @FXML
-    private void handleDeleteUser() {
-        User selectedUser = userTable.getSelectionModel().getSelectedItem();
-        if (selectedUser != null) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this user?", ButtonType.YES, ButtonType.NO);
-            alert.showAndWait();
-
-            if (alert.getResult() == ButtonType.YES) {
-                boolean success = AdminService.deleteUser(selectedUser.getEmail());
-                if (success) {
-                    userTable.getItems().remove(selectedUser);
-                } else {
-                    showAlert("Error", "Failed to delete user.");
-                }
-            }
-        } else {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "No user selected.");
-            alert.showAndWait();
-        }
-    }
-
-    @FXML
-    private void handleUpdate() {
-        String roomText = this.txtRoom.getText();
-        String floorText = this.txtFloor.getText();
-        String roomType = this.roomType.getSelectionModel().getSelectedItem();
-        Integer capacity = this.Capacity.getSelectionModel().getSelectedItem(); // assuming Capacity is a ChoiceBox<Integer>
-        Integer beds = this.Beds.getSelectionModel().getSelectedItem(); // assuming Beds is a ChoiceBox<Integer>
-        String priceText = this.txtPrice.getText();
-
-        if (roomText.isEmpty() || floorText.isEmpty() || roomType == null || capacity == null || beds == null || priceText.isEmpty()) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Fill all room information fields first.");
-            alert.showAndWait();
-            return;
-        }
-
-        int roomNumber;
-        int floorNumber;
-        double price;
-        try {
-            roomNumber = Integer.parseInt(roomText);
-            floorNumber = Integer.parseInt(floorText);
-            price = Double.parseDouble(priceText);
-        } catch (NumberFormatException e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter valid numeric values for room number, floor, and price.");
-            alert.showAndWait();
-            return;
-        }
-
-        InsertRoomDto roomData = new InsertRoomDto(roomNumber, floorNumber, roomType, capacity, beds, price);
-
-        if (AdminService.updateRoom(roomData)) {
-            showRoomList();
-            clear();
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "Room was updated successfully.");
-            alert.showAndWait();
-        } else {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "The room either does not exist or there was a database error.");
-            alert.showAndWait();
-        }
-    }
-
-    private void showStaffList(){
-        ObservableList<Staff> staffListData = AdminService.ListStaff();
-
-        SID_col.setCellValueFactory(cellData -> new SimpleIntegerProperty(cellData.getValue().getStaffID()).asObject());
-        Name_col.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStaffFirstName() + " " + cellData.getValue().getStaffLastName()));
-        staffEmail_col.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getStaffEmail()));
-        position_col.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getPosition()));
-        salary_col.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getSalary()).asObject());
-        FullTime_col.setCellValueFactory(cellData -> new SimpleBooleanProperty(cellData.getValue().isFullTime()).asObject());
-        Benefits_col.setCellValueFactory(cellData -> new SimpleBooleanProperty(cellData.getValue().isHasBenefits()).asObject());
-
-        FullTime_col.setCellFactory(column -> new TableCell<Staff, Boolean>() {
-            @Override
-            protected void updateItem(Boolean item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(item ? "Full Time" : "Half Time");
-                }
-            }
-        }); 
-
-        Benefits_col.setCellFactory(column -> new TableCell<Staff, Boolean>() {
-            @Override
-            protected void updateItem(Boolean item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(item ? "YES" : "NO");
-                }
-            }
-        });
-
-        reservationTable1.setItems(staffListData);
-    }
-
-    @FXML
-    private void handleDeleteStaff(){
-        Staff selectedStaff = reservationTable1.getSelectionModel().getSelectedItem();
-        if (selectedStaff != null) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this staff member?", ButtonType.YES, ButtonType.NO);
-            alert.showAndWait();
-
-            if (alert.getResult() == ButtonType.YES) {
-                boolean success = AdminService.deleteStaff(selectedStaff.getStaffEmail());
-                if (success) {
-                    reservationTable1.getItems().remove(selectedStaff);
-                } else {
-                    showAlert("Error", "Failed to delete staff member.");
-                }
-            }
-        } else {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "No user selected.");
-            alert.showAndWait();
-        }
-    }
-
-    @FXML
-    private void handleSearchStaff() {
-        String searchTerm = searchFieldStaff.getText().trim();
-        if (!searchTerm.isEmpty()) {
-            StaffFilter staffFilter = new StaffFilter(searchTerm);
-            String query = staffFilter.buildQuery();
-            ObservableList<Staff> searchResults = AdminService.searchStaff(query);
-            if (!searchResults.isEmpty()) {
-                reservationTable1.setItems(searchResults);
-            } else {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION, "No staff member found for the given email address.");
-                alert.showAndWait();
-            }
-        } else {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "Please enter an email address.");
-            alert.showAndWait();
-        }
     }
 
     @FXML

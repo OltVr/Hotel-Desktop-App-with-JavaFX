@@ -35,7 +35,7 @@ public class SignupController {
     @FXML
     private Label statusBar;
 
-    // Regex patterns for email and password validation
+
     private static final String EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     private static final String PASSWORD_REGEX = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^./&*?+=!])(?=\\S+$).{8,}$";
 
@@ -81,32 +81,32 @@ public class SignupController {
         String password = pwdSignUpPassword.getText();
         String confirmPassword = pwdSignUpConfirmPassword.getText();
 
-        // Validate email
+
         if (!email.matches(EMAIL_REGEX)) {
             showAlert("Invalid Email", "Please enter a valid email address.");
             return;
         }
 
-        // Check if email already exists
+
         if (UserService.userExists(email)) {
             showAlert("Email Already Exists", "The email address is already registered. Please use a different email.");
             return;
         }
 
-        // Validate password
+
         if (!password.matches(PASSWORD_REGEX)) {
             showAlert("Invalid Password", "Password requires at least 1 digit, lowercase & uppercase letter, special character, and minimum length of 8 characters.");
             return;
         }
 
-        // Check if passwords match
+
         if(!password.matches(confirmPassword)){
             showAlert("Sign Up Failed! ", "Passwords do not match.");
             return;
         }
 
 
-        // Other signup logic
+
         UserDto userSignUpData = new UserDto(
                 this.txtSignUpName.getText(),
                 this.txtSignUpLastName.getText(),
@@ -122,7 +122,7 @@ public class SignupController {
             root.setBottom(statusBar);
             BorderPane.setAlignment(statusBar, Pos.CENTER);
 
-            Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(5), event -> {
+            Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(3), event -> {
                 statusBar.setVisible(false);
 
                 Navigator.navigate(ae, Navigator.LOGIN_PAGE);

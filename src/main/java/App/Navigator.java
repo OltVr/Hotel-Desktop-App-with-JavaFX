@@ -22,7 +22,7 @@ public class Navigator {
     public static Locale locale = Locale.getDefault();
     private static String currentPage;
 
-    // Variable to keep track of the currently visible section
+
     private static String currentVisibleSection;
     private static String previousPage;
 
@@ -32,8 +32,7 @@ public class Navigator {
                 Navigator.class.getResource(page)
         );
 
-        // Get the user's current locale
-        // Load the appropriate resource bundle based on the locale
+
         if (locale.getLanguage().equals("sq")) {
             bundle = ResourceBundle.getBundle("translations.content_sq"); // Load Albanian resource bundle
         } else {
@@ -59,12 +58,6 @@ public class Navigator {
     }
 
 
-    public static void navigate(String page, ResourceBundle bundle) {
-        previousPage = currentPage; // Update the previous page
-        currentPage = page;
-        Navigator.bundle = bundle;
-    }
-
     public static void changeLanguage(Event e, String localeCode) {
         locale = new Locale(localeCode);
         bundle = ResourceBundle.getBundle("translations.content", locale);
@@ -84,7 +77,7 @@ public class Navigator {
             stage.show();
 
 
-            // Restore visibility state
+
             if (currentVisibleSection != null) {
                 Pane dashboardPane = (Pane) root.lookup("#dashboardPane");
                 Pane reservationPane = (Pane) root.lookup("#reservationPane");

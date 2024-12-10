@@ -9,7 +9,6 @@ import model.dto.CreateReservationDto;
 import model.filter.ReservationFilter;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,7 +99,7 @@ public class ReservationRepository {
                 INSERT INTO RESERVATION (email, roomNumber,checkInDate ,checkOutDate)
                 VALUE (?, ?, ?, ?)
                 """;
-        //String query = "INSERT INTO USER VALUE (?, ?, ?, ?, ?)";
+
         try {
             PreparedStatement pst = conn.prepareStatement(query);
             pst.setString(1, reservationData.getUserEmail());

@@ -19,7 +19,7 @@ public class RoomRepository {
                 INSERT INTO ROOMS (roomNumber, floorNumber, roomType, capacity, bedNumber, price)
                 VALUE (?, ?, ?, ?, ?, ?)
                 """;
-        //String query = "INSERT INTO USER VALUE (?, ?, ?, ?, ?)";
+
         try {
             PreparedStatement pst = conn.prepareStatement(query);
             pst.setInt(1, roomData.getRoomNumber());
@@ -39,7 +39,7 @@ public class RoomRepository {
     }
 
 
-    // QEKJO SKA QUERY, A MOS DUHET ME KON DIKUN TJETER JO NE REPO? JO, prapseprap po komunikon me databaze
+
     private static Room getRoomFromResultSet(ResultSet result) {
         try {
             int roomNumber = result.getInt("roomNumber");

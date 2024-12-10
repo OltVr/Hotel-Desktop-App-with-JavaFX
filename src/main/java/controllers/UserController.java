@@ -15,8 +15,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Text;
 import model.Reservation;
 import model.Room;
-import model.User;
-import service.AdminService;
 import service.UserService;
 
 import java.net.URL;
@@ -242,7 +240,7 @@ public class UserController implements Initializable {
     @FXML
     private void  seaRoomSelect() {
         Room room = seaTable.getSelectionModel().getSelectedItem();
-//        int num = roomTable.getSelectionModel().getSelectedIndex();
+
 
         if (room != null) {
             SessionManager.setRoom(room);
@@ -251,7 +249,7 @@ public class UserController implements Initializable {
     @FXML
     private void  cityRoomSelect() {
         Room room = cityTable.getSelectionModel().getSelectedItem();
-//        int num = roomTable.getSelectionModel().getSelectedIndex();
+
 
         if (room != null) {
             SessionManager.setRoom(room);
